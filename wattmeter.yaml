@@ -78,16 +78,45 @@ ads1115:
 #  continuous_mode: on
   id: ads1115_48
   
-
-
 sensor:
-# ads1115-48
+  - name: "Carport Power"
+    platform: ct_clamp
+    sensor: ads1115_a0
+    id: carport_power
+    update_interval: 10s
+    sample_duration: 2000ms
+    filters:
+      - calibrate_linear:
+          # Try to limit noise
+          - 0.001 -> 0.0
+          # Spec says 1V = 100 A = 24 kW
+          - 1.000 -> 24.0
+      - clamp:
+          min_value: 0.0
+          max_value: 24.0
+          ignore_out_of_range: false
+    unit_of_measurement: "kW"
+
+  - name: 'Carport Energy Today'
+    platform: total_daily_energy
+    id: carport_energy_today
+    power_id: carport_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+
+    # ads1115-48
   - name: "ADS1115 48 Channel A0-GND"
     id: ads1115_a0
     ads1115_id: ads1115_48
     multiplexer: 'A0_GND'
     gain: 6.144
     platform: ads1115
+    internal: True
   - name: "ADS1115 48 Channel A1-GND"
     id: ads1115_a1
     ads1115_id: ads1115_48
